@@ -1,16 +1,18 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import { ApplyDestroyPolicyAspect } from './utils';
+
+interface Props extends cdk.StackProps {
+  removeResourcesOnStackDeletion?: boolean;
+}
 
 export class CaseStudyStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props?: Props) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
-
-    // example resource
-    // const queue = new sqs.Queue(this, 'CaseStudyQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    // add necessary resource requirements
+    if (props?.removeResourcesOnStackDeletion) {
+      cdk.Aspects.of(this).add(new ApplyDestroyPolicyAspect());
+    }
   }
 }
