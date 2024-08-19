@@ -69,9 +69,13 @@ export class LambdaFunction extends Construct {
     this.fn = new lambdaNodejs.NodejsFunction(this, `${id}Lambda`, {
       entry: path.join(import.meta.dirname, '..', 'functions', `${id}.ts`),
       role: lambdaRole,
+      logGroup,
       timeout: Duration.seconds(30),
       runtime: Runtime.NODEJS_20_X,
-      bundling: { format: lambdaNodejs.OutputFormat.ESM },
+      bundling: {
+        format: lambdaNodejs.OutputFormat.ESM,
+        nodeModules: ['zod', '@aws-sdk/client-dynamodb', 'electrodb'],
+      },
       environment: {
         AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
         ...props?.environment,

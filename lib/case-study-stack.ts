@@ -61,16 +61,32 @@ export class CaseStudyStack extends cdk.Stack {
       }),
     };
 
-    const setInventoryLevel = new LambdaFunction(this, 'setInventoryLevel', {
+    const seedProductsFn = new LambdaFunction(this, 'seedProducts', {
       environment: { TABLE_NAME: productTable.tableName },
     });
+    productTable.grantWriteData(seedProductsFn.fn);
 
     api.addRoutes({
-      path: '/',
-      methods: [apiGw.HttpMethod.GET],
+      path: '/seed',
+      methods: [apiGw.HttpMethod.POST],
       integration: new apiGwInteg.HttpLambdaIntegration(
-        'setProductInventoryLevel',
-        setInventoryLevel.fn,
+        'seedProducts',
+        seedProductsFn.fn,
+      ),
+    });
+
+    const setInventoryLevelFn = new LambdaFunction(this, 'setInventoryLevel', {
+      environment: { TABLE_NAME: productTable.tableName },
+    });
+    productTable.grantReadData(setInventoryLevelFn.fn);
+    productTable.grantWriteData(setInventoryLevelFn.fn);
+
+    api.addRoutes({
+      path: '/{product_id}/quantity',
+      methods: [apiGw.HttpMethod.PUT],
+      integration: new apiGwInteg.HttpLambdaIntegration(
+        'updateProductQuantity',
+        setInventoryLevelFn.fn,
       ),
     });
 

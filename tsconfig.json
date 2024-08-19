@@ -1,9 +1,8 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "ESNext",
+    "module": "Preserve",
     "lib": ["ESNext"],
-    "moduleResolution": "Bundler",
     "declaration": true,
     "strict": true,
     "noImplicitAny": true,
