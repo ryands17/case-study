@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { APIGatewayProxyHandlerV2 } from 'aws-lambda';
-import { defaultEnvVars, sendResponse } from './schemas';
+import { defaultEnvVars, logger, sendResponse } from './schemas';
 import { product } from './models';
 
 const envSchema = defaultEnvVars.extend({
@@ -44,7 +44,9 @@ const products = [
   },
 ];
 
-export const handler: APIGatewayProxyHandlerV2 = async () => {
+export const handler: APIGatewayProxyHandlerV2 = async (_event, context) => {
+  logger.addContext(context);
+
   const envs = envSchema.parse(process.env);
   product.setTableName(envs.TABLE_NAME);
 

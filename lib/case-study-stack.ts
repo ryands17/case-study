@@ -1,9 +1,15 @@
 import * as cdk from 'aws-cdk-lib';
 import * as ddb from 'aws-cdk-lib/aws-dynamodb';
 import * as apiGw from 'aws-cdk-lib/aws-apigatewayv2';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as apiGwInteg from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import { StartingPosition } from 'aws-cdk-lib/aws-lambda';
+import {
+  DynamoEventSource,
+  SqsEventSource,
+} from 'aws-cdk-lib/aws-lambda-event-sources';
 import { Construct } from 'constructs';
 import { NagSuppressions } from 'cdk-nag';
 import { ApplyDestroyPolicyAspect, LambdaFunction } from './utils';
@@ -26,7 +32,57 @@ export class CaseStudyStack extends cdk.Stack {
       sortKey: { name: 'sk', type: ddb.AttributeType.STRING },
       billingMode: ddb.BillingMode.PAY_PER_REQUEST,
       pointInTimeRecovery: true,
+      stream: ddb.StreamViewType.NEW_AND_OLD_IMAGES,
     });
+
+    // Queue and DLQ to handle sending notifications to the webhook
+    const inventoryThresholdDlq = new sqs.Queue(this, 'inventoryThresholdDlq', {
+      enforceSSL: true,
+    });
+
+    const inventoryThresholdQueue = new sqs.Queue(
+      this,
+      'inventoryThresholdQueue',
+      {
+        visibilityTimeout: cdk.Duration.minutes(10),
+        enforceSSL: true,
+        deadLetterQueue: { queue: inventoryThresholdDlq, maxReceiveCount: 3 },
+      },
+    );
+
+    // lambda to process queue messages
+    const sendProductDetails = new LambdaFunction(this, 'sendProductDetails', {
+      timeout: cdk.Duration.minutes(3),
+      memorySize: 1024,
+    });
+
+    sendProductDetails.fn.addEventSource(
+      new SqsEventSource(inventoryThresholdQueue, {
+        batchSize: 20,
+        maxBatchingWindow: cdk.Duration.seconds(30),
+      }),
+    );
+
+    // event source to the table for listening to product quantity changes
+    const productTableStream = new DynamoEventSource(productTable, {
+      startingPosition: StartingPosition.TRIM_HORIZON,
+      retryAttempts: 2,
+      batchSize: 50,
+      maxBatchingWindow: cdk.Duration.seconds(30),
+      bisectBatchOnError: true,
+    });
+
+    const lambdaStreamHandler = new LambdaFunction(
+      this,
+      'lambdaStreamHandler',
+      {
+        timeout: cdk.Duration.seconds(200),
+        memorySize: 1024,
+        environment: { QUEUE_URL: inventoryThresholdQueue.queueUrl },
+      },
+    );
+    lambdaStreamHandler.fn.addEventSource(productTableStream);
+    inventoryThresholdQueue.grantSendMessages(lambdaStreamHandler.fn);
 
     // API Gateway logs
     const apiGatewayLogs = new logs.LogGroup(this, 'apiLogs', {
@@ -65,6 +121,7 @@ export class CaseStudyStack extends cdk.Stack {
       environment: { TABLE_NAME: productTable.tableName },
     });
     productTable.grantWriteData(seedProductsFn.fn);
+    productTable.grantReadData(seedProductsFn.fn);
 
     api.addRoutes({
       path: '/seed',
@@ -97,10 +154,14 @@ export class CaseStudyStack extends cdk.Stack {
       cdk.Aspects.of(this).add(new ApplyDestroyPolicyAspect());
     }
 
-    // supress API auth warnings
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      '/CaseStudyStack/productsApi',
+    // supress CDK specific warnings
+    NagSuppressions.addResourceSuppressions(
+      lambdaStreamHandler,
+      [{ id: 'AwsSolutions-IAM5', reason: 'CDK connection so is safe to use' }],
+      true,
+    );
+    NagSuppressions.addResourceSuppressions(
+      api,
       [{ id: 'AwsSolutions-APIG4', reason: 'This is a test API' }],
       true,
     );

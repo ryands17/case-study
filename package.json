@@ -29,7 +29,10 @@
     "typescript": "~5.5.3"
   },
   "dependencies": {
+    "@aws-lambda-powertools/logger": "^2.7.0",
     "@aws-sdk/client-dynamodb": "^3.632.0",
+    "@aws-sdk/client-sqs": "^3.632.0",
+    "@aws-sdk/util-dynamodb": "^3.632.0",
     "aws-cdk-lib": "2.152.0",
     "constructs": "^10.0.0",
     "electrodb": "^2.14.3",

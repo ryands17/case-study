@@ -74,7 +74,12 @@ export class LambdaFunction extends Construct {
       runtime: Runtime.NODEJS_20_X,
       bundling: {
         format: lambdaNodejs.OutputFormat.ESM,
-        nodeModules: ['zod', '@aws-sdk/client-dynamodb', 'electrodb'],
+        nodeModules: [
+          'zod',
+          '@aws-sdk/client-dynamodb',
+          'electrodb',
+          '@aws-lambda-powertools/logger',
+        ],
       },
       environment: {
         AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
