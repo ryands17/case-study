@@ -1,0 +1,58 @@
+{
+  "info": {
+    "_postman_id": "be4956fb-d182-45f6-8517-1c8a9353f2dd",
+    "name": "Case Study",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "30430898"
+  },
+  "item": [
+    {
+      "name": "Seed inventory",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{http-api-url}}/seed",
+          "host": ["{{http-api-url}}"],
+          "path": ["seed"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Set inventory level",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"type\": \"decrement\",\n    \"value\": 30\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{http-api-url}}/prd_cQVSdZd58X/quantity",
+          "host": ["{{http-api-url}}"],
+          "path": ["prd_cQVSdZd58X", "quantity"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Simulate",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{http-api-url}}/simulate",
+          "host": ["{{http-api-url}}"],
+          "path": ["simulate"]
+        }
+      },
+      "response": []
+    }
+  ]
+}

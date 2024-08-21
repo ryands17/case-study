@@ -16,8 +16,11 @@ export const envs = z
   .object({
     AWS_ACCOUNT_ID: z.string(),
     AWS_REGION: z.string().default('eu-west-1'),
+    ENV: z.enum(['dev', 'test', 'prod']).default('dev'),
   })
   .parse(process.env);
+
+export const STACK_NAME = `CaseStudy-${envs.ENV}`;
 
 export class ApplyDestroyPolicyAspect implements IAspect {
   public visit(node: IConstruct): void {
@@ -41,14 +44,16 @@ export class LambdaFunction extends Construct {
   ) {
     super(scope, id);
 
+    const name = `${STACK_NAME}-${id}`;
+
     // The lambda function's log group
-    const logGroup = new logs.LogGroup(this, `${id}LogGroup`, {
+    const logGroup = new logs.LogGroup(this, `${name}LogGroup`, {
       logGroupName: `/aws/lambda/${id}`,
       retention: logs.RetentionDays.ONE_WEEK,
     });
 
     // The Lambda function's role with logging permissions
-    const lambdaRole = new iam.Role(this, `${id}Role`, {
+    const lambdaRole = new iam.Role(this, `${name}Role`, {
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
       inlinePolicies: {
         logging: new iam.PolicyDocument({
@@ -66,7 +71,7 @@ export class LambdaFunction extends Construct {
       },
     });
 
-    this.fn = new lambdaNodejs.NodejsFunction(this, `${id}Lambda`, {
+    this.fn = new lambdaNodejs.NodejsFunction(this, `${name}Lambda`, {
       entry: path.join(import.meta.dirname, '..', 'functions', `${id}.ts`),
       role: lambdaRole,
       logGroup,

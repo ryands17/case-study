@@ -16,3 +16,5 @@ new CaseStudyStack(app, 'CaseStudyStack', {
 
 // Add the cdk-nag AwsSolutions Pack with extra verbose logging enabled.
 cdk.Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
+// project specific tags (will also help consolidate CloudWatch logs)
+cdk.Tags.of(app).add('environment', envs.ENV);
