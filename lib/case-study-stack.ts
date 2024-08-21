@@ -5,7 +5,11 @@ import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as apiGwInteg from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import { StartingPosition } from 'aws-cdk-lib/aws-lambda';
+import {
+  StartingPosition,
+  FunctionUrlAuthType,
+  HttpMethod,
+} from 'aws-cdk-lib/aws-lambda';
 import {
   DynamoEventSource,
   SqsEventSource,
@@ -35,6 +39,13 @@ export class CaseStudyStack extends cdk.Stack {
       stream: ddb.StreamViewType.NEW_AND_OLD_IMAGES,
     });
 
+    // this is the webhook to send inventory threshold updates to
+    const sampleWebhookApi = new LambdaFunction(this, 'sampleWebhookApi');
+    const webhookUrl = sampleWebhookApi.fn.addFunctionUrl({
+      authType: FunctionUrlAuthType.NONE,
+      cors: { allowedOrigins: ['*'], allowedMethods: [HttpMethod.POST] },
+    });
+
     // Queue and DLQ to handle sending notifications to the webhook
     const inventoryThresholdDlq = new sqs.Queue(this, 'inventoryThresholdDlq', {
       enforceSSL: true,
@@ -54,6 +65,7 @@ export class CaseStudyStack extends cdk.Stack {
     const sendProductDetails = new LambdaFunction(this, 'sendProductDetails', {
       timeout: cdk.Duration.minutes(3),
       memorySize: 1024,
+      environment: { WEBHOOK_URL: webhookUrl.url },
     });
 
     sendProductDetails.fn.addEventSource(
@@ -147,7 +159,24 @@ export class CaseStudyStack extends cdk.Stack {
       ),
     });
 
+    // a sample simulate endpoint for testing the entire architecture
+    const simulateArch = new LambdaFunction(this, 'simulateArch', {
+      environment: { TABLE_NAME: productTable.tableName },
+    });
+    productTable.grantReadData(simulateArch.fn);
+    productTable.grantWriteData(simulateArch.fn);
+
+    api.addRoutes({
+      path: '/simulate',
+      methods: [apiGw.HttpMethod.POST],
+      integration: new apiGwInteg.HttpLambdaIntegration(
+        'simulate',
+        simulateArch.fn,
+      ),
+    });
+
     new cdk.CfnOutput(this, 'apiUrl', { value: api.apiEndpoint });
+    new cdk.CfnOutput(this, 'webhookUrl', { value: webhookUrl.url });
 
     // add necessary resource requirements
     if (props?.removeResourcesOnStackDeletion) {

@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as lambdaNodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import { Runtime } from 'aws-cdk-lib/aws-lambda';
+import { Runtime, Architecture } from 'aws-cdk-lib/aws-lambda';
 import {
   type IAspect,
   CfnResource,
@@ -72,14 +72,11 @@ export class LambdaFunction extends Construct {
       logGroup,
       timeout: Duration.seconds(30),
       runtime: Runtime.NODEJS_20_X,
+      architecture: Architecture.ARM_64,
       bundling: {
         format: lambdaNodejs.OutputFormat.ESM,
-        nodeModules: [
-          'zod',
-          '@aws-sdk/client-dynamodb',
-          'electrodb',
-          '@aws-lambda-powertools/logger',
-        ],
+        platform: 'node',
+        banner: `const require = (await import('node:module')).createRequire(import.meta.url);`,
       },
       environment: {
         AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',

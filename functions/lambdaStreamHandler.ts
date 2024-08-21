@@ -30,6 +30,11 @@ export const handler: DynamoDBStreamHandler = async (event) => {
   );
 
   const failedItems = await sendForProcessing(records);
+  if (failedItems.length > 0) {
+    logger.error(
+      `Failed to send ${failedItems.length} items to the queue. Will try again via the stream`,
+    );
+  }
 
   return { batchItemFailures: failedItems };
 };
@@ -40,7 +45,7 @@ const sendForProcessing = async (
   records: NonNullable<Image[]>,
 ): Promise<FailedItem[]> => {
   const envs = envSchema.parse(process.env);
-  logger.info('Sending records to SQS for processing');
+  logger.info(`Sending ${records.length} records to SQS for processing`);
 
   const results = await Promise.allSettled(
     records.map((message) => {

@@ -56,6 +56,10 @@ export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
     productId: evt.pathParameters.productId,
   });
 
+  logger.info(
+    `Performing ${evt.body.type} on ${data.productId} for quanity: ${evt.body.value}`,
+  );
+
   switch (evt.body.type) {
     case 'increment':
       await updateProduct.add({ quantity: evt.body.value }).go();
