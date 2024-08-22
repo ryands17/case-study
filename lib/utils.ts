@@ -62,7 +62,7 @@ export class LambdaFunction extends Construct {
 
     // The lambda function's log group
     const logGroup = new logs.LogGroup(this, `${name}LogGroup`, {
-      logGroupName: `/aws/lambda/${id}`,
+      logGroupName: `/aws/lambda/${name}`,
       retention: logs.RetentionDays.ONE_WEEK,
     });
 

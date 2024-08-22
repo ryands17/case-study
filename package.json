@@ -9,6 +9,7 @@
     "build": "tsc",
     "watch": "tsc -w",
     "cdk": "dotenv -- cdk",
+    "test": "./test.sh",
     "prepare": "husky"
   },
   "devDependencies": {
@@ -22,7 +23,8 @@
     "lint-staged": "^15.2.9",
     "prettier": "^3.3.3",
     "tsx": "^4.17.0",
-    "typescript": "~5.5.3"
+    "typescript": "~5.5.3",
+    "vitest": "^2.0.5"
   },
   "dependencies": {
     "@aws-lambda-powertools/logger": "^2.7.0",

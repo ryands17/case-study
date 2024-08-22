@@ -22,8 +22,6 @@ interface Props extends cdk.StackProps {
 }
 
 export class CaseStudyStack extends cdk.Stack {
-  apiUrl: string;
-
   constructor(scope: Construct, id: string, props?: Props) {
     super(scope, id, props);
 
@@ -185,9 +183,14 @@ export class CaseStudyStack extends cdk.Stack {
     });
 
     // outputs for cloudformation and testing
-    this.apiUrl = api.apiEndpoint;
     new cdk.CfnOutput(this, 'apiUrl', { value: api.apiEndpoint });
     new cdk.CfnOutput(this, 'webhookUrl', { value: webhookApi.apiEndpoint });
+    new cdk.CfnOutput(this, 'productsTableName', {
+      value: productTable.tableName,
+    });
+    new cdk.CfnOutput(this, 'processProductsQueue', {
+      value: inventoryThresholdDlq.queue.queueUrl,
+    });
 
     // add necessary resource requirements
     if (props?.removeResourcesOnStackDeletion) {

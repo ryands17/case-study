@@ -47,6 +47,9 @@ This is how the architecture looks like for this case study:
 
 - `pnpm build` compile typescript to js
 - `pnpm watch` watch for changes and compile
+- `pnpm test` run integration tests via vitest. This will deploy the stack if not already deployed. Passing in the `destroy` argument will also destroy the stack after the tests have been completed
+  - `pnpm test` run tests and keep the stack
+  - `pnpm test destroy` run tests and then destroy the stack
 - `pnpm cdk deploy` deploy this stack to your default AWS account/region
 - `pnpm cdk deploy --watch` deploy this stack to in watch mode to update lambdas and view logs in realtime
 - `pnpm cdk diff` compare deployed stack with current state

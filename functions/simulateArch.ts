@@ -1,13 +1,11 @@
 import { APIGatewayProxyHandlerV2 } from 'aws-lambda';
 import { z } from 'zod';
-import { defaultEnvVars, logger, sendResponse } from './helpers/schemas';
+import { defaultEnvVars, logger, sendResponse, sleep } from './helpers/schemas';
 import { product } from './helpers/models';
 
 const envSchema = defaultEnvVars.extend({
   TABLE_NAME: z.string(),
 });
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const handler: APIGatewayProxyHandlerV2 = async (_, context) => {
   logger.addContext(context);
