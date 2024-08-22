@@ -1,9 +1,15 @@
+// this lambda is used to simulate the entire architecture and how it works. To be used in development only!
 import { APIGatewayProxyHandlerV2 } from 'aws-lambda';
 import { z } from 'zod';
-import { defaultEnvVars, logger, sendResponse, sleep } from './helpers/schemas';
 import { product } from './helpers/models';
+import {
+  DefaultEnvironmentVariablesSchema,
+  logger,
+  sendResponse,
+  sleep,
+} from './helpers/schemas';
 
-const envSchema = defaultEnvVars.extend({
+const envSchema = DefaultEnvironmentVariablesSchema.extend({
   TABLE_NAME: z.string(),
 });
 

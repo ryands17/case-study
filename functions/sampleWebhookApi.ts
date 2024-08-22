@@ -1,3 +1,4 @@
+// this is the handler for the external webhook API
 import { LambdaFunctionURLHandler } from 'aws-lambda';
 import { logger, sendResponse } from './helpers/schemas';
 

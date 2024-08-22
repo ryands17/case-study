@@ -1,9 +1,10 @@
+// this lambda processes messages from the SQS queue and sends them to the external Webhook
 import { SQSHandler } from 'aws-lambda';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
-import { defaultEnvVars, logger } from './helpers/schemas';
+import { DefaultEnvironmentVariablesSchema, logger } from './helpers/schemas';
 import { z } from 'zod';
 
-const envSchema = defaultEnvVars.extend({
+const envSchema = DefaultEnvironmentVariablesSchema.extend({
   WEBHOOK_URL: z.string(),
 });
 

@@ -1,3 +1,4 @@
+// The main stack with all resources defined
 import * as cdk from 'aws-cdk-lib';
 import * as ddb from 'aws-cdk-lib/aws-dynamodb';
 import * as apiGw from 'aws-cdk-lib/aws-apigatewayv2';
@@ -75,6 +76,7 @@ export class CaseStudyStack extends cdk.Stack {
       environment: { WEBHOOK_URL: webhookApi.apiEndpoint },
     });
 
+    // event source for polling messages from the queue
     sendProductDetails.fn.addEventSource(
       new SqsEventSource(inventoryThresholdQueue.queue, {
         batchSize: 20,
@@ -91,6 +93,7 @@ export class CaseStudyStack extends cdk.Stack {
       bisectBatchOnError: true,
     });
 
+    // lambda to send events to the SQS queue
     const lambdaStreamHandler = new LambdaFunction(
       this,
       'lambdaStreamHandler',
@@ -111,7 +114,7 @@ export class CaseStudyStack extends cdk.Stack {
     apiGatewayLogs.grantWrite(
       new iam.ServicePrincipal('apigateway.amazonaws.com'),
     );
-    // HTTP API
+    // HTTP API - API Gateway
     const api = new apiGw.HttpApi(this, 'productsApi', {
       corsPreflight: {
         allowMethods: [apiGw.CorsHttpMethod.ANY],
@@ -120,7 +123,7 @@ export class CaseStudyStack extends cdk.Stack {
       createDefaultStage: true,
     });
 
-    // enable access logging
+    // enable api access logging
     const stage = api.defaultStage!.node.defaultChild as apiGw.CfnStage;
     stage.accessLogSettings = {
       destinationArn: apiGatewayLogs.logGroupArn,
@@ -136,6 +139,7 @@ export class CaseStudyStack extends cdk.Stack {
       }),
     };
 
+    // lambda to seed products (for development only)
     const seedProductsFn = new LambdaFunction(this, 'seedProducts', {
       environment: { TABLE_NAME: productTable.tableName },
     });
@@ -151,6 +155,7 @@ export class CaseStudyStack extends cdk.Stack {
       ),
     });
 
+    // lambda to set inventory level of a given product
     const setInventoryLevelFn = new LambdaFunction(this, 'setInventoryLevel', {
       environment: { TABLE_NAME: productTable.tableName },
     });

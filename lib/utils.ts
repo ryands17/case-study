@@ -13,7 +13,7 @@ import {
 import { IConstruct, Construct } from 'constructs';
 import { z } from 'zod';
 
-export const envs = z
+export const environmentVariables = z
   .object({
     AWS_ACCOUNT_ID: z.string(),
     AWS_REGION: z.string().default('eu-west-1'),
@@ -21,8 +21,12 @@ export const envs = z
   })
   .parse(process.env);
 
-export const STACK_NAME = `CaseStudy-${envs.ENV}`;
+export const STACK_NAME = `CaseStudy-${environmentVariables.ENV}`;
 
+/**
+ * Adds a removal policy of `destroy` to all resources.
+ * This is helpful for development or testing environments
+ */
 export class ApplyDestroyPolicyAspect implements IAspect {
   public visit(node: IConstruct): void {
     if (node instanceof CfnResource) {

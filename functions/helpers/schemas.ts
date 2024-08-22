@@ -1,10 +1,17 @@
 import { z } from 'zod';
 import { Logger, LogLevel } from '@aws-lambda-powertools/logger';
 
-export const defaultEnvVars = z.object({
+export const DefaultEnvironmentVariablesSchema = z.object({
   AWS_REGION: z.string().default('eu-west-1'),
 });
 
+/**
+ * Builds a lambda specific response to send via API Gateway
+ *
+ * @param {any} data - data with either success or errors sent as a response
+ * @param {number} statusCode - appropriate HTTP status code
+ * @returns {object} - lambda specific response object
+ */
 export const sendResponse = (data: any, statusCode: number = 200) => {
   const body = { ...data, success: statusCode >= 200 && statusCode < 400 };
 
@@ -17,6 +24,7 @@ export const sendResponse = (data: any, statusCode: number = 200) => {
   };
 };
 
+// logger for system wide logs
 export const logger = new Logger({
   serviceName: 'case-study',
   logLevel: LogLevel.INFO,

@@ -1,10 +1,15 @@
+// this lambda seeds initial products that can be used for testing purposes
 import { z } from 'zod';
 import { APIGatewayProxyHandlerV2 } from 'aws-lambda';
-import { defaultEnvVars, logger, sendResponse } from './helpers/schemas';
+import {
+  DefaultEnvironmentVariablesSchema,
+  logger,
+  sendResponse,
+} from './helpers/schemas';
 import { product } from './helpers/models';
 import { products } from './helpers/seed';
 
-const envSchema = defaultEnvVars.extend({
+const envSchema = DefaultEnvironmentVariablesSchema.extend({
   TABLE_NAME: z.string(),
 });
 

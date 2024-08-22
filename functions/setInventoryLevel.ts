@@ -1,9 +1,14 @@
+// this lambda sets the inventory level (quantity) for the given product
 import { APIGatewayProxyHandlerV2 } from 'aws-lambda';
 import { z } from 'zod';
-import { defaultEnvVars, logger, sendResponse } from './helpers/schemas';
+import {
+  DefaultEnvironmentVariablesSchema,
+  logger,
+  sendResponse,
+} from './helpers/schemas';
 import { product } from './helpers/models';
 
-const envSchema = defaultEnvVars.extend({
+const envSchema = DefaultEnvironmentVariablesSchema.extend({
   TABLE_NAME: z.string(),
 });
 

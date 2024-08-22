@@ -1,3 +1,4 @@
+// the product model stored in dynamodb
 import { Entity } from 'electrodb';
 import { nanoid } from 'nanoid';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';

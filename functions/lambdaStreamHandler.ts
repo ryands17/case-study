@@ -1,9 +1,10 @@
+// this lambda handles the events from the DynamoDB stream and sends them to SQS for further processing
 import { DynamoDBStreamHandler, StreamRecord } from 'aws-lambda';
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
 import { z } from 'zod';
-import { defaultEnvVars, logger } from './helpers/schemas';
+import { DefaultEnvironmentVariablesSchema, logger } from './helpers/schemas';
 
-const envSchema = defaultEnvVars.extend({
+const EnvironmentVariablesSchema = DefaultEnvironmentVariablesSchema.extend({
   QUEUE_URL: z.string(),
 });
 
@@ -22,6 +23,7 @@ export const handler: DynamoDBStreamHandler = async (event) => {
       const { NewImage, SequenceNumber } = record.dynamodb;
       if (!NewImage || !SequenceNumber) return;
 
+      // add sequence number to return failed items if there are any
       return Object.assign(NewImage, { streamId: SequenceNumber });
     }
     return;
@@ -44,7 +46,7 @@ type FailedItem = { itemIdentifier: string };
 const sendForProcessing = async (
   records: NonNullable<Image[]>,
 ): Promise<FailedItem[]> => {
-  const envs = envSchema.parse(process.env);
+  const envs = EnvironmentVariablesSchema.parse(process.env);
   logger.info(`Sending ${records.length} records to SQS for processing`);
 
   const results = await Promise.allSettled(
