@@ -1,7 +1,7 @@
 import { DynamoDBStreamHandler, StreamRecord } from 'aws-lambda';
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
 import { z } from 'zod';
-import { defaultEnvVars, logger } from './schemas';
+import { defaultEnvVars, logger } from './helpers/schemas';
 
 const envSchema = defaultEnvVars.extend({
   QUEUE_URL: z.string(),

@@ -1,7 +1,7 @@
 import { APIGatewayProxyHandlerV2 } from 'aws-lambda';
 import { z } from 'zod';
-import { defaultEnvVars, logger, sendResponse } from './schemas';
-import { product } from './models';
+import { defaultEnvVars, logger, sendResponse } from './helpers/schemas';
+import { product } from './helpers/models';
 
 const envSchema = defaultEnvVars.extend({
   TABLE_NAME: z.string(),

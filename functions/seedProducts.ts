@@ -1,48 +1,12 @@
 import { z } from 'zod';
 import { APIGatewayProxyHandlerV2 } from 'aws-lambda';
-import { defaultEnvVars, logger, sendResponse } from './schemas';
-import { product } from './models';
+import { defaultEnvVars, logger, sendResponse } from './helpers/schemas';
+import { product } from './helpers/models';
+import { products } from './helpers/seed';
 
 const envSchema = defaultEnvVars.extend({
   TABLE_NAME: z.string(),
 });
-
-const products = [
-  {
-    productName: 'Tank top',
-    quantity: 100,
-    threshold: 30,
-  },
-  {
-    productName: 'Cardigan',
-    quantity: 50,
-    threshold: 50,
-  },
-  {
-    productName: 'Tube',
-    quantity: 80,
-    threshold: 40,
-  },
-  {
-    productName: 'Windcheater',
-    quantity: 50,
-  },
-  {
-    productName: 'Saree',
-    quantity: 90,
-    threshold: 20,
-  },
-  {
-    productName: 'Sheer',
-    quantity: 75,
-    threshold: 30,
-  },
-  {
-    productName: 'Jumpsuit',
-    quantity: 80,
-    threshold: 20,
-  },
-];
 
 export const handler: APIGatewayProxyHandlerV2 = async (_event, context) => {
   logger.addContext(context);

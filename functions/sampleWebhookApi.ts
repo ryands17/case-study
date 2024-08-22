@@ -1,5 +1,5 @@
 import { LambdaFunctionURLHandler } from 'aws-lambda';
-import { logger, sendResponse } from './schemas';
+import { logger, sendResponse } from './helpers/schemas';
 
 export const handler: LambdaFunctionURLHandler = async (event, context) => {
   logger.addContext(context);

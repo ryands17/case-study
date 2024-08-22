@@ -4,11 +4,7 @@ import * as apiGw from 'aws-cdk-lib/aws-apigatewayv2';
 import * as apiGwInteg from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import {
-  StartingPosition,
-  FunctionUrlAuthType,
-  HttpMethod,
-} from 'aws-cdk-lib/aws-lambda';
+import { StartingPosition } from 'aws-cdk-lib/aws-lambda';
 import {
   DynamoEventSource,
   SqsEventSource,
@@ -42,9 +38,21 @@ export class CaseStudyStack extends cdk.Stack {
 
     // this is the webhook to send inventory threshold updates to
     const sampleWebhookApi = new LambdaFunction(this, 'sampleWebhookApi');
-    const webhookUrl = sampleWebhookApi.fn.addFunctionUrl({
-      authType: FunctionUrlAuthType.NONE,
-      cors: { allowedOrigins: ['*'], allowedMethods: [HttpMethod.POST] },
+    const webhookApi = new apiGw.HttpApi(this, 'webhookApi', {
+      corsPreflight: {
+        allowMethods: [apiGw.CorsHttpMethod.ANY],
+        allowOrigins: ['*'],
+      },
+      createDefaultStage: true,
+    });
+
+    webhookApi.addRoutes({
+      path: '/webhook',
+      methods: [apiGw.HttpMethod.POST],
+      integration: new apiGwInteg.HttpLambdaIntegration(
+        'webhookHandler',
+        sampleWebhookApi.fn,
+      ),
     });
 
     // Queue and DLQ to handle sending notifications to the webhook
@@ -66,7 +74,7 @@ export class CaseStudyStack extends cdk.Stack {
     const sendProductDetails = new LambdaFunction(this, 'sendProductDetails', {
       timeout: cdk.Duration.minutes(3),
       memorySize: 1024,
-      environment: { WEBHOOK_URL: webhookUrl.url },
+      environment: { WEBHOOK_URL: webhookApi.apiEndpoint },
     });
 
     sendProductDetails.fn.addEventSource(
@@ -179,7 +187,7 @@ export class CaseStudyStack extends cdk.Stack {
     // outputs for cloudformation and testing
     this.apiUrl = api.apiEndpoint;
     new cdk.CfnOutput(this, 'apiUrl', { value: api.apiEndpoint });
-    new cdk.CfnOutput(this, 'webhookUrl', { value: webhookUrl.url });
+    new cdk.CfnOutput(this, 'webhookUrl', { value: webhookApi.apiEndpoint });
 
     // add necessary resource requirements
     if (props?.removeResourcesOnStackDeletion) {
@@ -187,6 +195,14 @@ export class CaseStudyStack extends cdk.Stack {
     }
 
     // supress CDK specific warnings
+    NagSuppressions.addResourceSuppressions(
+      webhookApi,
+      [
+        { id: 'AwsSolutions-APIG1', reason: 'This is a 3rd party API' },
+        { id: 'AwsSolutions-APIG4', reason: 'This is a 3rd party API' },
+      ],
+      true,
+    );
     NagSuppressions.addResourceSuppressions(
       lambdaStreamHandler,
       [{ id: 'AwsSolutions-IAM5', reason: 'CDK connection so is safe to use' }],

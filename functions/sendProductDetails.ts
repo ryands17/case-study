@@ -1,6 +1,6 @@
 import { SQSHandler } from 'aws-lambda';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
-import { defaultEnvVars, logger } from './schemas';
+import { defaultEnvVars, logger } from './helpers/schemas';
 import { z } from 'zod';
 
 const envSchema = defaultEnvVars.extend({
@@ -26,7 +26,7 @@ export const handler: SQSHandler = async (event, context) => {
   const results = await Promise.allSettled(
     records.map(async ({ messageId, ...rest }) => {
       console.log('sending record');
-      const raw = await fetch(envs.WEBHOOK_URL, {
+      const raw = await fetch(`${envs.WEBHOOK_URL}/webhook`, {
         method: 'POST',
         body: JSON.stringify(rest),
         headers: { 'Content-type': 'application/json' },
