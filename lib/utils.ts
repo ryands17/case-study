@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as lambdaNodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Runtime, Architecture } from 'aws-cdk-lib/aws-lambda';
 import {
   type IAspect,
@@ -27,6 +28,19 @@ export class ApplyDestroyPolicyAspect implements IAspect {
     if (node instanceof CfnResource) {
       node.applyRemovalPolicy(RemovalPolicy.DESTROY);
     }
+  }
+}
+
+/**
+ * Creates an SQS Queue with SSL enforced for message encryption in transit.
+ */
+export class SQSQueue extends Construct {
+  queue: sqs.Queue;
+
+  constructor(scope: Construct, id: string, props?: sqs.QueueProps) {
+    super(scope, id);
+
+    this.queue = new sqs.Queue(this, 'Queue', { ...props, enforceSSL: true });
   }
 }
 

@@ -1,7 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import * as ddb from 'aws-cdk-lib/aws-dynamodb';
 import * as apiGw from 'aws-cdk-lib/aws-apigatewayv2';
-import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as apiGwInteg from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -16,7 +15,7 @@ import {
 } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { Construct } from 'constructs';
 import { NagSuppressions } from 'cdk-nag';
-import { ApplyDestroyPolicyAspect, LambdaFunction } from './utils';
+import { ApplyDestroyPolicyAspect, LambdaFunction, SQSQueue } from './utils';
 
 interface Props extends cdk.StackProps {
   /**
@@ -27,6 +26,8 @@ interface Props extends cdk.StackProps {
 }
 
 export class CaseStudyStack extends cdk.Stack {
+  apiUrl: string;
+
   constructor(scope: Construct, id: string, props?: Props) {
     super(scope, id, props);
 
@@ -47,17 +48,17 @@ export class CaseStudyStack extends cdk.Stack {
     });
 
     // Queue and DLQ to handle sending notifications to the webhook
-    const inventoryThresholdDlq = new sqs.Queue(this, 'inventoryThresholdDlq', {
-      enforceSSL: true,
-    });
+    const inventoryThresholdDlq = new SQSQueue(this, 'inventoryThresholdDlq');
 
-    const inventoryThresholdQueue = new sqs.Queue(
+    const inventoryThresholdQueue = new SQSQueue(
       this,
       'inventoryThresholdQueue',
       {
         visibilityTimeout: cdk.Duration.minutes(10),
-        enforceSSL: true,
-        deadLetterQueue: { queue: inventoryThresholdDlq, maxReceiveCount: 3 },
+        deadLetterQueue: {
+          queue: inventoryThresholdDlq.queue,
+          maxReceiveCount: 3,
+        },
       },
     );
 
@@ -69,7 +70,7 @@ export class CaseStudyStack extends cdk.Stack {
     });
 
     sendProductDetails.fn.addEventSource(
-      new SqsEventSource(inventoryThresholdQueue, {
+      new SqsEventSource(inventoryThresholdQueue.queue, {
         batchSize: 20,
         maxBatchingWindow: cdk.Duration.seconds(30),
       }),
@@ -90,11 +91,11 @@ export class CaseStudyStack extends cdk.Stack {
       {
         timeout: cdk.Duration.seconds(200),
         memorySize: 1024,
-        environment: { QUEUE_URL: inventoryThresholdQueue.queueUrl },
+        environment: { QUEUE_URL: inventoryThresholdQueue.queue.queueUrl },
       },
     );
     lambdaStreamHandler.fn.addEventSource(productTableStream);
-    inventoryThresholdQueue.grantSendMessages(lambdaStreamHandler.fn);
+    inventoryThresholdQueue.queue.grantSendMessages(lambdaStreamHandler.fn);
 
     // API Gateway logs
     const apiGatewayLogs = new logs.LogGroup(this, 'apiLogs', {
@@ -175,6 +176,8 @@ export class CaseStudyStack extends cdk.Stack {
       ),
     });
 
+    // outputs for cloudformation and testing
+    this.apiUrl = api.apiEndpoint;
     new cdk.CfnOutput(this, 'apiUrl', { value: api.apiEndpoint });
     new cdk.CfnOutput(this, 'webhookUrl', { value: webhookUrl.url });
 
