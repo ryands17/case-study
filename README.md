@@ -8,7 +8,7 @@ This is how the architecture looks like for this case study:
 
 ![Architecture Diagram](./case-study.png)
 
-- This architeture exposes an enpoint via API Gateway to update the product quantity. The endpoint is handled via a Lambda that updates the product quanity stored in a DynamoDB table
+- This architecture exposes an enpoint via API Gateway to update the product quantity. The endpoint is handled via a Lambda that updates the product quanity stored in a DynamoDB table
 - When a product quantity is updated, DynamoDB triggers an event via DynamoDB streams which is handled by a Lambda that filters the products whose quantity is below the threshold limit to an SQS queue
 - Another lambda is configured to consume messages from the queue and send it to an external webhook. This is configured in such a way that if the webhook response fails, it will send this to a DLQ for re-processing
 
@@ -29,6 +29,7 @@ This is how the architecture looks like for this case study:
 - Run `pnpm cdk deploy --watch` to deploy the stack locally and get live logs
 - The outputs section will specify the URL that we can use to interact with the API
 - Copy this URL and add it to the `http-api-url` environment variable in Postman to run the APIs in the newly imported collection
+- You can also run commands like tests and these are specified in the [Useful Commands](#useful-commands) section
 
 ## Endpoints
 
@@ -47,7 +48,7 @@ This is how the architecture looks like for this case study:
 
 - `pnpm build` compile typescript to js
 - `pnpm watch` watch for changes and compile
-- `pnpm test` run integration tests via vitest. This will deploy the stack if not already deployed. Passing in the `destroy` argument will also destroy the stack after the tests have been completed
+- `pnpm test` run integration tests via vitest with the following options
   - `pnpm test` run tests and keep the stack
   - `pnpm test destroy` run tests and then destroy the stack
 - `pnpm cdk deploy` deploy this stack to your default AWS account/region
