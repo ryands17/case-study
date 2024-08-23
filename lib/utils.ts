@@ -101,11 +101,12 @@ export class LambdaFunction extends Construct {
         platform: 'node',
         banner: `const require = (await import('node:module')).createRequire(import.meta.url);`,
       },
+      ...props,
       environment: {
         AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
+        POWERTOOLS_DEV: environmentVariables.ENV === 'dev' ? 'true' : 'false',
         ...props?.environment,
       },
-      ...props,
     });
   }
 }

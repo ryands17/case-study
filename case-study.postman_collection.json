@@ -34,9 +34,9 @@
           }
         },
         "url": {
-          "raw": "{{http-api-url}}/prd_cQVSdZd58X/quantity",
+          "raw": "{{http-api-url}}/prd_AEKIIXbwa2/quantity",
           "host": ["{{http-api-url}}"],
-          "path": ["prd_cQVSdZd58X", "quantity"]
+          "path": ["prd_AEKIIXbwa2", "quantity"]
         }
       },
       "response": []
